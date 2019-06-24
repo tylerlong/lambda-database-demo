@@ -22,12 +22,12 @@ service: lambda-database-demo # NOTE: update this with your service name
 provider:
   name: aws
   runtime: nodejs10.x
-  vpc:
-    securityGroupIds:
-      - sg-0b1dc6db0d034e23b
-    subnetIds:
-      - subnet-027bcc1e0aa9b57c6
-      - subnet-0a7f1c4a1ff9ad3b8
+  # vpc:
+  #   securityGroupIds:
+  #     - sg-0b1dc6db0d034e23b
+  #   subnetIds:
+  #     - subnet-027bcc1e0aa9b57c6
+  #     - subnet-0a7f1c4a1ff9ad3b8
 
 # you can overwrite defaults here
 #  stage: dev
@@ -112,6 +112,42 @@ functions:
 # you can add CloudFormation resource templates here
 resources:
   Resources:
+    Vpc:
+      Type: AWS::EC2::VPC
+      Properties: 
+        CidrBlock: 10.0.0.0/16
+        # InstanceTenancy: default
+
+    PublicSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: us-east-1b
+        CidrBlock: 10.0.0.0/24
+        VpcId: 
+          Ref: Vpc
+    PublicSubnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: us-east-1d
+        CidrBlock: 10.0.1.0/24
+        VpcId: 
+          Ref: Vpc
+
+    PrivateSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: us-east-1b
+        CidrBlock: 10.0.10.0/24
+        VpcId: 
+          Ref: Vpc
+    PrivateSubnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: us-east-1d
+        CidrBlock: 10.0.11.0/24
+        VpcId: 
+          Ref: Vpc
+
     Database:
       Type: AWS::RDS::DBInstance
       Properties:
@@ -121,9 +157,46 @@ resources:
         DBInstanceClass: db.t3.micro
         MasterUsername: tylerliu
         MasterUserPassword: 101734UTR!
-        DBSubnetGroupName: tyler-liu-db-subnet-group-dont-touch
+        DBSubnetGroupName:
+          Ref: DbSubnetGroup
         VPCSecurityGroups:
-          - sg-0b1dc6db0d034e23b
+          - Ref: DbVpcSecurityGroup
+
+    DbSubnetGroup:
+      Type: "AWS::RDS::DBSubnetGroup"
+      Properties: 
+        # DBSubnetGroupName: PrivateDbSubnet
+        # DBSubnetGroupDescription: PrivateDbSubnet
+        SubnetIds:
+          - Ref: PrivateSubnet1
+          - Ref: PrivateSubnet2
+
+    DbVpcSecurityGroup:
+      Type: "AWS::EC2::SecurityGroup"
+      Properties:
+        # GroupName: DBSecurityGroup
+        # GroupDescription: Allow local access
+        SecurityGroupIngress:
+          - CidrIp: 10.0.0.0/16
+            IpProtocol: tcp
+            FromPort: 5432
+            ToPort: 5432
+        VpcId: 
+          Ref: Vpc
+
+
+    # Database:
+    #   Type: AWS::RDS::DBInstance
+    #   Properties:
+    #     Engine: postgres
+    #     AllocatedStorage: 20
+    #     EngineVersion: 11.2
+    #     DBInstanceClass: db.t3.micro
+    #     MasterUsername: tylerliu
+    #     MasterUserPassword: 101734UTR!
+    #     DBSubnetGroupName: tyler-liu-db-subnet-group-dont-touch
+    #     VPCSecurityGroups:
+    #       - sg-0b1dc6db0d034e23b
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"
