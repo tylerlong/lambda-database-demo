@@ -22,6 +22,12 @@ service: lambda-database-demo # NOTE: update this with your service name
 provider:
   name: aws
   runtime: nodejs10.x
+  vpc:
+    securityGroupIds:
+      - sg-0b1dc6db0d034e23b
+    subnetIds:
+      - subnet-027bcc1e0aa9b57c6
+      - subnet-0a7f1c4a1ff9ad3b8
 
 # you can overwrite defaults here
 #  stage: dev
@@ -104,12 +110,20 @@ functions:
 #      variable2: value2
 
 # you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
+resources:
+  Resources:
+    Database:
+      Type: AWS::RDS::DBInstance
+      Properties:
+        Engine: postgres
+        AllocatedStorage: 20
+        EngineVersion: 11.2
+        DBInstanceClass: db.t3.micro
+        MasterUsername: tylerliu
+        MasterUserPassword: 101734UTR!
+        DBSubnetGroupName: tyler-liu-db-subnet-group-dont-touch
+        VPCSecurityGroups:
+          - sg-0b1dc6db0d034e23b
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"
