@@ -22,6 +22,12 @@ service: lambda-database-demo # NOTE: update this with your service name
 provider:
   name: aws
   runtime: nodejs10.x
+  # vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
+  #   securityGroupIds:
+  #     - Ref: VpcSecurityGroup
+  #   subnetIds:
+  #     - Ref: PrivateSubnet1
+  #     - Ref: PrivateSubnet2
   # vpc:
   #   securityGroupIds:
   #     - sg-0b1dc6db0d034e23b
@@ -182,6 +188,9 @@ resources:
             IpProtocol: tcp
             FromPort: 5432
             ToPort: 5432
+        SecurityGroupEgress:
+          - IpProtocol: -1
+            CidrIp: 127.0.0.1/32
         VpcId: 
           Ref: Vpc
 
