@@ -160,22 +160,22 @@ resources:
         DBSubnetGroupName:
           Ref: DbSubnetGroup
         VPCSecurityGroups:
-          - Ref: DbVpcSecurityGroup
+          - Ref: VpcSecurityGroup
 
     DbSubnetGroup:
       Type: "AWS::RDS::DBSubnetGroup"
       Properties: 
-        # DBSubnetGroupName: PrivateDbSubnet
-        # DBSubnetGroupDescription: PrivateDbSubnet
+        DBSubnetGroupName: PrivateDbSubnet
+        DBSubnetGroupDescription: Private database subnet
         SubnetIds:
           - Ref: PrivateSubnet1
           - Ref: PrivateSubnet2
 
-    DbVpcSecurityGroup:
+    VpcSecurityGroup:
       Type: "AWS::EC2::SecurityGroup"
       Properties:
-        # GroupName: DBSecurityGroup
-        # GroupDescription: Allow local access
+        GroupName: LocalPostgres
+        GroupDescription: Allow local access to part 5432
         SecurityGroupIngress:
           - CidrIp: 10.0.0.0/16
             IpProtocol: tcp
