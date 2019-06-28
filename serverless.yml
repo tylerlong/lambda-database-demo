@@ -122,7 +122,6 @@ resources:
       Type: AWS::EC2::VPC
       Properties: 
         CidrBlock: 10.0.0.0/16
-        # InstanceTenancy: default
 
     PublicSubnet1:
       Type: AWS::EC2::Subnet
@@ -172,7 +171,7 @@ resources:
     DbSubnetGroup:
       Type: "AWS::RDS::DBSubnetGroup"
       Properties: 
-        DBSubnetGroupName: PrivateDbSubnet
+        DBSubnetGroupName: ${self:service}-${self:provider.stage}
         DBSubnetGroupDescription: Private database subnet
         SubnetIds:
           - Ref: PrivateSubnet1
@@ -181,7 +180,7 @@ resources:
     VpcSecurityGroup:
       Type: "AWS::EC2::SecurityGroup"
       Properties:
-        GroupName: LocalPostgres
+        GroupName: ${self:service}-${self:provider.stage}
         GroupDescription: Allow local access to part 5432
         SecurityGroupIngress:
           - CidrIp: 10.0.0.0/16
