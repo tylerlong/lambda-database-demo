@@ -1,121 +1,29 @@
-# Welcome to Serverless!
-#
-# This file is the main config file for your service.
-# It's very minimal at this point and uses default values.
-# You can always add more config options for more control.
-# We've included some commented out config examples here.
-# Just uncomment any of them to get that config option.
-#
-# For full config options, check the docs:
-#    docs.serverless.com
-#
-# Happy Coding!
-
-service: lambda-database-demo # NOTE: update this with your service name
-#app: your-app-name
-#tenant: your-tenant-name
-
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-# frameworkVersion: "=X.X.X"
+service: lambda-database-demo
 
 provider:
   name: aws
   runtime: nodejs10.x
-  # vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
-  #   securityGroupIds:
-  #     - Ref: VpcSecurityGroup
-  #   subnetIds:
-  #     - Ref: PrivateSubnet1
-  #     - Ref: PrivateSubnet2
-  # vpc:
-  #   securityGroupIds:
-  #     - sg-0b1dc6db0d034e23b
-  #   subnetIds:
-  #     - subnet-027bcc1e0aa9b57c6
-  #     - subnet-0a7f1c4a1ff9ad3b8
+  environment: ${file(./.env.yml)}
+  vpc:
+    securityGroupIds:
+      - Ref: SecurityGroup
+    subnetIds:
+      - Ref: PrivateSubnet1
+      - Ref: PrivateSubnet2
+      - Ref: PrivateSubnet3
+      - Ref: PrivateSubnet4
 
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
-
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
-
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
-
-# you can add packaging information here
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
+stage: dev
+region: us-east-1
 
 functions:
   hello:
     handler: handler.hello
     events:
       - http:
-          path:  hello
+          path: hello
           method: get
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - websocket: $connect
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
-#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
-#      - alb:
-#          listenerArn: arn:aws:elasticloadbalancing:us-east-1:XXXXXX:listener/app/my-load-balancer/50dc6c495c0c9188/
-#          priority: 1
-#          conditions:
-#            host: example.com
-#            path: /hello
 
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
-
-# you can add CloudFormation resource templates here
 resources:
   Resources:
     Vpc:
@@ -123,33 +31,61 @@ resources:
       Properties: 
         CidrBlock: 10.0.0.0/16
 
-    PublicSubnet1:
-      Type: AWS::EC2::Subnet
-      Properties:
-        AvailabilityZone: us-east-1b
-        CidrBlock: 10.0.0.0/24
-        VpcId: 
-          Ref: Vpc
-    PublicSubnet2:
-      Type: AWS::EC2::Subnet
-      Properties:
-        AvailabilityZone: us-east-1d
-        CidrBlock: 10.0.1.0/24
-        VpcId: 
-          Ref: Vpc
-
     PrivateSubnet1:
       Type: AWS::EC2::Subnet
       Properties:
-        AvailabilityZone: us-east-1b
+        AvailabilityZone: us-east-1a
         CidrBlock: 10.0.10.0/24
         VpcId: 
           Ref: Vpc
     PrivateSubnet2:
       Type: AWS::EC2::Subnet
       Properties:
-        AvailabilityZone: us-east-1d
+        AvailabilityZone: us-east-1b
         CidrBlock: 10.0.11.0/24
+        VpcId: 
+          Ref: Vpc
+    PrivateSubnet3:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: us-east-1c
+        CidrBlock: 10.0.12.0/24
+        VpcId: 
+          Ref: Vpc
+    PrivateSubnet4:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: us-east-1d
+        CidrBlock: 10.0.13.0/24
+        VpcId: 
+          Ref: Vpc
+
+    DbSubnetGroup:
+      Type: "AWS::RDS::DBSubnetGroup"
+      Properties: 
+        DBSubnetGroupName: ${self:service}-${self:provider.stage}
+        DBSubnetGroupDescription: Private database subnet group
+        SubnetIds:
+          - Ref: PrivateSubnet1
+          - Ref: PrivateSubnet2
+          - Ref: PrivateSubnet3
+          - Ref: PrivateSubnet4
+
+    SecurityGroup:
+      Type: "AWS::EC2::SecurityGroup"
+      Properties:
+        GroupName: ${self:service}-${self:provider.stage}
+        GroupDescription: Allow local access to port 5432
+        SecurityGroupIngress:
+          - CidrIp: 10.0.0.0/16
+            IpProtocol: tcp
+            FromPort: 5432
+            ToPort: 5432
+        SecurityGroupEgress:
+          - CidrIp: 10.0.0.0/16
+            IpProtocol: tcp
+            FromPort: 5432
+            ToPort: 5432
         VpcId: 
           Ref: Vpc
 
@@ -158,54 +94,17 @@ resources:
       Properties:
         DBInstanceIdentifier: ${self:service}-${self:provider.stage}
         Engine: postgres
+        DBName: dbname
         AllocatedStorage: 20
         EngineVersion: 11.2
         DBInstanceClass: db.t3.micro
-        MasterUsername: tylerliu
-        MasterUserPassword: 101734UTR!
+        MasterUsername: ${self:provider.environment.DATABASE_USERNAME}
+        MasterUserPassword: ${self:provider.environment.DATABASE_PASSWORD}
         DBSubnetGroupName:
           Ref: DbSubnetGroup
         VPCSecurityGroups:
-          - Ref: VpcSecurityGroup
+          - Ref: SecurityGroup
 
-    DbSubnetGroup:
-      Type: "AWS::RDS::DBSubnetGroup"
-      Properties: 
-        DBSubnetGroupName: ${self:service}-${self:provider.stage}
-        DBSubnetGroupDescription: Private database subnet
-        SubnetIds:
-          - Ref: PrivateSubnet1
-          - Ref: PrivateSubnet2
-
-    VpcSecurityGroup:
-      Type: "AWS::EC2::SecurityGroup"
-      Properties:
-        GroupName: ${self:service}-${self:provider.stage}
-        GroupDescription: Allow local access to part 5432
-        SecurityGroupIngress:
-          - CidrIp: 10.0.0.0/16
-            IpProtocol: tcp
-            FromPort: 5432
-            ToPort: 5432
-        SecurityGroupEgress:
-          - IpProtocol: -1
-            CidrIp: 127.0.0.1/32
-        VpcId: 
-          Ref: Vpc
-
-
-    # Database:
-    #   Type: AWS::RDS::DBInstance
-    #   Properties:
-    #     Engine: postgres
-    #     AllocatedStorage: 20
-    #     EngineVersion: 11.2
-    #     DBInstanceClass: db.t3.micro
-    #     MasterUsername: tylerliu
-    #     MasterUserPassword: 101734UTR!
-    #     DBSubnetGroupName: tyler-liu-db-subnet-group-dont-touch
-    #     VPCSecurityGroups:
-    #       - sg-0b1dc6db0d034e23b
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"
