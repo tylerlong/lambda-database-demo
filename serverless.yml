@@ -15,15 +15,13 @@ stage: dev
 region: us-east-1
 
 functions:
-  hello:
+  app:
     vpc:
       securityGroupIds:
         - Ref: LambdaSecurityGroup
-    handler: handler.hello
+    handler: handler.app
     events:
-      - http:
-          path: hello
-          method: get
+      - http: 'ANY {proxy+}'
 
 resources:
   Resources:
