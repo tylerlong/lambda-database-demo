@@ -28,17 +28,11 @@ app.get('/bot-server', async (req, res) => {
 
 module.exports.app = serverlessHTTP(app)
 
-// module.exports.hello = async (event) => {
-//   const client = new Client(`postgresql://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_URL}/dbname`)
-//   await client.connect()
-
-//   const res = await client.query('SELECT NOW()')
-//   await client.end()
-
-//   return {
-//     statusCode: 200,
-//     body: JSON.stringify({
-//       message: `Database time is ${res.rows[0].now}`
-//     }, null, 2)
-//   }
-// }
+module.exports.hello = async (event) => {
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: `I am an exceptional hello`
+    }, null, 2)
+  }
+}

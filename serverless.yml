@@ -22,6 +22,15 @@ functions:
     handler: handler.app
     events:
       - http: 'ANY {proxy+}'
+  hello:
+    vpc:
+      securityGroupIds:
+        - Ref: LambdaSecurityGroup
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
 
 resources:
   Resources:
