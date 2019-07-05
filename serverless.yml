@@ -3,6 +3,9 @@ service: lambda-database-demo
 provider:
   name: aws
   runtime: nodejs10.x
+  memorySize: 256
+  stage: dev
+  region: us-east-1
   environment: ${file(./.env.yml)}
   vpc:
     subnetIds:
@@ -10,9 +13,6 @@ provider:
       - Ref: PrivateSubnet2
       - Ref: PrivateSubnet3
       - Ref: PrivateSubnet4
-
-stage: dev
-region: us-east-1
 
 functions:
   app:

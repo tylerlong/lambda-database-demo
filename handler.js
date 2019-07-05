@@ -18,6 +18,14 @@ app.get('/world', async (req, res) => {
   res.send('888')
 })
 
+app.get('/db-uri', async (req, res) => {
+  res.send(process.env.RINGCENTRAL_CHATBOT_DATABASE_CONNECTION_URI)
+})
+
+app.get('/bot-server', async (req, res) => {
+  res.send(process.env.RINGCENTRAL_CHATBOT_SERVER)
+})
+
 module.exports.app = serverlessHTTP(app)
 
 // module.exports.hello = async (event) => {
