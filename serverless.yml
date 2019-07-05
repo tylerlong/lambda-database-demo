@@ -5,8 +5,6 @@ provider:
   runtime: nodejs10.x
   environment: ${file(./.env.yml)}
   vpc:
-    securityGroupIds:
-      - Ref: SecurityGroup
     subnetIds:
       - Ref: PrivateSubnet1
       - Ref: PrivateSubnet2
@@ -18,6 +16,9 @@ region: us-east-1
 
 functions:
   hello:
+    vpc:
+      securityGroupIds:
+        - Ref: LambdaSecurityGroup
     handler: handler.hello
     events:
       - http:
@@ -71,21 +72,30 @@ resources:
           - Ref: PrivateSubnet3
           - Ref: PrivateSubnet4
 
-    SecurityGroup:
+    LambdaSecurityGroup:
       Type: "AWS::EC2::SecurityGroup"
       Properties:
-        GroupName: ${self:service}-${self:provider.stage}
-        GroupDescription: Allow local access to port 5432
+        GroupName: ${self:service}-${self:provider.stage}-lambda
+        GroupDescription: Allow all outbound traffic, no inbound
+        SecurityGroupIngress:
+          - IpProtocol: -1
+            CidrIp: 127.0.0.1/32
+        VpcId: 
+          Ref: Vpc
+
+    DbSecurityGroup:
+      Type: "AWS::EC2::SecurityGroup"
+      Properties:
+        GroupName: ${self:service}-${self:provider.stage}-db
+        GroupDescription: Allow local inbound to port 5432, no outbound
         SecurityGroupIngress:
           - CidrIp: 10.0.0.0/16
             IpProtocol: tcp
             FromPort: 5432
             ToPort: 5432
         SecurityGroupEgress:
-          - CidrIp: 10.0.0.0/16
-            IpProtocol: tcp
-            FromPort: 5432
-            ToPort: 5432
+          - IpProtocol: -1
+            CidrIp: 127.0.0.1/32
         VpcId: 
           Ref: Vpc
 
@@ -103,4 +113,4 @@ resources:
         DBSubnetGroupName:
           Ref: DbSubnetGroup
         VPCSecurityGroups:
-          - Ref: SecurityGroup
+          - Ref: DbSecurityGroup
