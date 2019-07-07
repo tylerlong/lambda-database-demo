@@ -6,20 +6,18 @@ provider:
   memorySize: 256
   stage: dev
   region: us-east-1
-  timeout: 30
+  timeout: 30 # maximum value allowed by api gateway
   environment: ${file(./.env.yml)}
   vpc:
+    securityGroupIds:
+      - Ref: LambdaSecurityGroup
     subnetIds:
       - Ref: PrivateSubnet1
       - Ref: PrivateSubnet2
       - Ref: PrivateSubnet3
-      - Ref: PrivateSubnet4
 
 functions:
   app:
-    vpc:
-      securityGroupIds:
-        - Ref: LambdaSecurityGroup
     handler: handler.app
     events:
       - http: 'ANY {proxy+}'
@@ -35,41 +33,31 @@ resources:
       Type: AWS::EC2::Subnet
       Properties:
         AvailabilityZone: us-east-1a
-        CidrBlock: 10.0.10.0/24
+        CidrBlock: 10.0.1.0/24
         VpcId: 
           Ref: Vpc
     PrivateSubnet2:
       Type: AWS::EC2::Subnet
       Properties:
         AvailabilityZone: us-east-1b
-        CidrBlock: 10.0.11.0/24
+        CidrBlock: 10.0.2.0/24
         VpcId: 
           Ref: Vpc
     PrivateSubnet3:
       Type: AWS::EC2::Subnet
       Properties:
         AvailabilityZone: us-east-1c
-        CidrBlock: 10.0.12.0/24
-        VpcId: 
-          Ref: Vpc
-    PrivateSubnet4:
-      Type: AWS::EC2::Subnet
-      Properties:
-        AvailabilityZone: us-east-1d
-        CidrBlock: 10.0.13.0/24
+        CidrBlock: 10.0.3.0/24
         VpcId: 
           Ref: Vpc
 
-    DbSubnetGroup:
-      Type: "AWS::RDS::DBSubnetGroup"
-      Properties: 
-        DBSubnetGroupName: ${self:service}-${self:provider.stage}
-        DBSubnetGroupDescription: Private database subnet group
-        SubnetIds:
-          - Ref: PrivateSubnet1
-          - Ref: PrivateSubnet2
-          - Ref: PrivateSubnet3
-          - Ref: PrivateSubnet4
+    PublicSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone: us-east-1d
+        CidrBlock: 10.0.21.0/24
+        VpcId: 
+          Ref: Vpc
 
     LambdaSecurityGroup:
       Type: "AWS::EC2::SecurityGroup"
@@ -97,7 +85,15 @@ resources:
             CidrIp: 127.0.0.1/32
         VpcId: 
           Ref: Vpc
-
+    DbSubnetGroup:
+      Type: "AWS::RDS::DBSubnetGroup"
+      Properties: 
+        DBSubnetGroupName: ${self:service}-${self:provider.stage}
+        DBSubnetGroupDescription: Private database subnet group
+        SubnetIds:
+          - Ref: PrivateSubnet1
+          - Ref: PrivateSubnet2
+          - Ref: PrivateSubnet3
     Database:
       Type: AWS::RDS::DBInstance
       Properties:
@@ -113,3 +109,81 @@ resources:
           Ref: DbSubnetGroup
         VPCSecurityGroups:
           - Ref: DbSecurityGroup
+
+    Eip:
+      Type: AWS::EC2::EIP
+      Properties:
+        Domain: vpc
+    NatGateway:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+            - Eip
+            - AllocationId
+        SubnetId:
+          Ref: PublicSubnet1
+    PrivateRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: Vpc
+    PrivateRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: PrivateRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: NatGateway
+    SubnetRouteTableAssociationPrivate1:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PrivateSubnet1
+        RouteTableId:
+          Ref: PrivateRouteTable
+    SubnetRouteTableAssociationPrivate2:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PrivateSubnet2
+        RouteTableId:
+          Ref: PrivateRouteTable
+    SubnetRouteTableAssociationPrivate3:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PrivateSubnet3
+        RouteTableId:
+          Ref: PrivateRouteTable
+
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway
+    VPCGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId:
+          Ref: Vpc
+        InternetGatewayId:
+          Ref: InternetGateway
+    PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: Vpc
+    PublicRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: PublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId:
+          Ref: InternetGateway
+    SubnetRouteTableAssociationPublic1:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PublicSubnet1
+        RouteTableId:
+          Ref: PublicRouteTable
