@@ -6,6 +6,7 @@ provider:
   memorySize: 256
   stage: dev
   region: us-east-1
+  timeout: 30
   environment: ${file(./.env.yml)}
   vpc:
     subnetIds:
@@ -22,15 +23,6 @@ functions:
     handler: handler.app
     events:
       - http: 'ANY {proxy+}'
-  hello:
-    vpc:
-      securityGroupIds:
-        - Ref: LambdaSecurityGroup
-    handler: handler.hello
-    events:
-      - http:
-          path: hello
-          method: get
 
 resources:
   Resources:

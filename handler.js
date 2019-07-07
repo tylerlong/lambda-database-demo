@@ -1,6 +1,7 @@
 const { Client } = require('pg')
 const serverlessHTTP = require('serverless-http')
 const express = require('express')
+const axios = require('axios')
 
 const app = express()
 
@@ -15,7 +16,7 @@ app.get('/hello', async (req, res) => {
 })
 
 app.get('/world', async (req, res) => {
-  res.send('888')
+  res.send('666')
 })
 
 app.get('/db-uri', async (req, res) => {
@@ -26,13 +27,9 @@ app.get('/bot-server', async (req, res) => {
   res.send(process.env.RINGCENTRAL_CHATBOT_SERVER)
 })
 
-module.exports.app = serverlessHTTP(app)
+app.get('/baidu', async (req, res) => {
+  const r = await axios.get('http://baidu.com')
+  res.send(r.data)
+})
 
-module.exports.hello = async (event) => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: `I am an exceptional hello`
-    }, null, 2)
-  }
-}
+module.exports.app = serverlessHTTP(app)
